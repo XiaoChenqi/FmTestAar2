@@ -1,0 +1,188 @@
+//apply plugin: 'com.dd.comgradle'
+//apply plugin: 'com.mob.sdk'
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+
+def static releaseTime() {
+    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
+}
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    defaultConfig {
+        applicationId "com.facilityone.product.shang"
+        minSdkVersion rootProject.ext.appMinSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName_app
+
+        flavorDimensions "versionCode"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [host: "app"]
+            }
+        }
+
+//        ndk {
+//            //设置支持的so库架构
+//            abiFilter 'armeabi' //,'x86','armeabi-v7a','x86_64','arm64-v8a'
+//        }
+
+        multiDexEnabled true
+        manifestPlaceholders = [ALIYUN_PUSH_APP_KEY   : ALIYUN_PUSH_APP_KEY,
+                                ALIYUN_PUSH_APP_SECRET: ALIYUN_PUSH_APP_SECRET,
+                                MAP_API_KEY           : MAP_API_KEY,
+                                SERVICE_VALUE         : SERVICE_VALUE,
+                                UMENG_CHANNEL_VALUE   : "TEST"
+        ]
+
+        buildConfigField "String", "SERVER_URL", "\"https://wechat.fmone.cn\""
+
+        buildConfigField "String", "UPDATE_CHANNEL", "\"kDsx2HrR75QZ7BfZ\""
+        buildConfigField "String", "UPDATE_APP_KEY", "\"a3KwjjbdEYDAQjcGCc7D6ZHNzYrxsKTa\""
+
+        buildConfigField "String", "APP_KEY", "\"00000000\""
+        buildConfigField "String", "APP_SECRET", "\"11111111\""
+
+        buildConfigField "boolean", "NEED_UPDATE_RECORD", "false"
+        buildConfigField "String", "CUSTOMER_CODE", "\"dWGitJATnhziWBt7\""
+
+        buildConfigField "String", "UMENG_CHANNEL_KEY", "\"${UMENG_CHANNEL_KEY}\""
+        buildConfigField "String", "UMENG_CHANNEL_VALUE", "\"${UMENG_CHANNEL_VALUE}\""
+        buildConfigField "String", "QQZONE_KEY", "\"${QQZONE_KEY}\""
+        buildConfigField "String", "QQZONE_SECRET", "\"${QQZONE_SECRET}\""
+        buildConfigField "String", "DING_DING_SECRET", "\"${DING_DING_SECRET}\""
+        buildConfigField "String", "WEI_XIN_KEY", "\"${WEI_XIN_KEY}\""
+        buildConfigField "String", "WEI_XIN_SECRET", "\"${WEI_XIN_SECRET}\""
+
+        buildConfigField "String", "MI_APPID", "\"${MI_APPID}\""
+        buildConfigField "String", "MI_APPKEY", "\"${MI_APPKEY}\""
+
+        buildConfigField "String", "ALIYUN_PUSH_APP_KEY", "\"${ALIYUN_PUSH_APP_KEY}\""
+        buildConfigField "String", "ALIYUN_PUSH_APP_SECRET", "\"${ALIYUN_PUSH_APP_SECRET}\""
+
+    }
+
+    dexOptions {
+        jumboMode true
+//        preDexLibraries = false //保证其他的lib没有被preDex
+        javaMaxHeapSize "8g"
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file("../android_shang_key_2015_9_15.jks")
+            storePassword "fone2015"
+            keyAlias "fone"
+            keyPassword "fone2015"
+        }
+
+        release {
+            storeFile file("../android_shang_key_2015_9_15.jks")
+            storePassword "fone2015"
+            keyAlias "fone"
+            keyPassword "fone2015"
+            v2SigningEnabled false
+        }
+    }
+
+    buildTypes {
+
+        debug {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), '../proguard-rules.pro'
+        }
+
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), '../proguard-rules.pro'
+
+            applicationVariants.all { variant ->
+                variant.outputs.all { output ->
+                    def outputFile = output.outputFile
+                    if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                        // 输出apk名称为F-ONE_v1.0_2015-01-15_wandoujia.apk
+                        def fileName = "${SERVICE_VALUE}" +
+                                "_v${variant.productFlavors[0].properties.get("versionName")}" +
+                                "_${variant.productFlavors[0].properties.get("versionCode")}" +
+                                "_${releaseTime()}_${variant.productFlavors[0].name}.apk"
+                        outputFileName = fileName
+                    }
+                }
+            }
+        }
+    }
+
+    lintOptions {
+        abortOnError false//lint时候终止错误上报,防止编译的时候莫名的失败
+    }
+
+    productFlavors {
+        ATEST {
+            versionCode 100
+            versionName "0.0.0"
+            buildConfigField "String", "UPDATE_CHANNEL", "\"kDsx2HrR75QZ7BfZ\""
+            buildConfigField "String", "CUSTOMER_CODE", "\"dWGitJATnhziWBt7\""
+            buildConfigField "boolean", "NEED_UPDATE_RECORD", "true"
+        }
+
+        ZGZ {//中国尊
+            versionCode 100
+            versionName "1.5.0"
+            buildConfigField "String", "UPDATE_APP_KEY", "\"QbnSSQrNjMYZrxY4DHNjbbXm52GskBwC\""
+            buildConfigField "String", "SERVER_URL", "\"http://fm.hy.citic.com\""
+            buildConfigField "String", "UPDATE_CHANNEL", "\"8CK6b7mQd5tF7NFE\""
+            buildConfigField "String", "CUSTOMER_CODE","\"N5ej78eNk6zx423P\""
+        }
+    }
+
+    productFlavors.all {
+        flavor -> flavor.manifestPlaceholders = [UMENG_CHANNEL_VALUE: name]
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation project(':arch')
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    //LeakCanary
+//    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5.1'
+//    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.1'
+    //noinspection GradleCompatible
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    testImplementation 'junit:junit:4.12'
+    annotationProcessor 'com.luojilab.ddcomponent:router-anno-compiler:1.0.0'
+    // 阿里云推送
+    implementation 'com.aliyun.ams:alicloud-android-push:3.1.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push:3.0.5@aar'
+    //阿里云崩溃分析
+    api('com.aliyun.ams:alicloud-android-ha-adapter:1.1.3.2-open@aar') {
+        transitive=true
+    }
+    api('com.aliyun.ams:alicloud-android-ha-crashreporter:1.2.2-open@aar') {
+        transitive=true
+    }
+}
+
+MobSDK {
+    appKey "${MOB_APP_KEY}"
+    appSecret "${MOB_APP_SECRET}"
+    SMSSDK {
+        gui false
+    }
+}
+
+combuild {
+    applicationName = 'com.facilityone.wireless.a.AppApplication'
+    isRegisterCompoAuto = false
+}
